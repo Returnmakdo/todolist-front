@@ -1,30 +1,26 @@
 import { Link } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 import styled from "styled-components";
-import Helmet from "../shared/Helmet";
 
 function Home() {
   return (
-    <>
-      <Helmet title={"Home"} />
-      <Layout>
-        <TodoTitle>TODO LIST</TodoTitle>
-        <LinkBox>
-          <Link to="/write">
-            <BtnBox>
-              <img className="imgBtn" src="img/pen.png" alt="투두작성" />
-              <StText>TODO</StText>
-            </BtnBox>
-          </Link>
-          <Link to="/todolist">
-            <BtnBox>
-              <img className="imgBtn" src="img/menu.png" alt="투두조회" />
-              <StText>TODO LIST</StText>
-            </BtnBox>
-          </Link>
-        </LinkBox>
-      </Layout>
-    </>
+    <Layout>
+      <TodoTitle>TODO LIST</TodoTitle>
+      <LinkBox>
+        <Link to="/write">
+          <BtnBox>
+            <img className="imgBtn" src="img/pen.png" alt="투두작성" />
+            <StText>TODO</StText>
+          </BtnBox>
+        </Link>
+        <Link to="/todolist">
+          <BtnBox>
+            <img className="imgBtn" src="img/menu.png" alt="투두조회" />
+            <StText>TODO LIST</StText>
+          </BtnBox>
+        </Link>
+      </LinkBox>
+    </Layout>
   );
 }
 

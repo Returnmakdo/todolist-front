@@ -6,6 +6,7 @@ const SERVER_URL = process.env.REACT_APP_TODOS_URL;
 export const __addTodos = createAsyncThunk(
   "todos/addTodos",
   async (arg, thunkAPI) => {
+    console.log(SERVER_URL);
     try {
       const { data } = await axios.post(SERVER_URL, arg);
       return thunkAPI.fulfillWithValue(data);
