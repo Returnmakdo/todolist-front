@@ -1,55 +1,66 @@
-import { useDispatch } from "react-redux";
-import { useState, React, useRef, useEffect } from "react";
-import { __deleteComment, __editSave } from "../../redux/modules/comments"; // __editComment
+import { useState, React, useEffect } from "react";
 import DeleteSvg from "../../styles/svg/DeleteSvg";
 import CloseSvg from "../../styles/svg/CloseSvg";
 import EditSvg from "../../styles/svg/EditSvg";
 import CheckSvg from "../../styles/svg/CheckSvg";
 import styled from "styled-components";
-import useInputs from "../../hooks/useInputs";
+import { useForm } from "react-hook-form";
+import { useMutation } from "react-query";
+import { deleteComment, editComment } from "../../api/comments/commentsApi";
+import { queryClient } from "../..";
 
 function CommentEdit({ comment }) {
   const [disable, setDisable] = useState(true);
-  const dispatch = useDispatch();
-  const { inputs, onChange, reset } = useInputs({ comment: comment.comment });
-  const inputRef = useRef();
+  const { register, handleSubmit, setValue, setFocus } = useForm();
+  const { mutate: deleteMutate } = useMutation(deleteComment, {
+    onSuccess: () => queryClient.invalidateQueries("comments"),
+  });
+  const { mutate: editMutate } = useMutation(editComment, {
+    onSuccess: () => queryClient.invalidateQueries("comments"),
+  });
+  useEffect(() => {
+    setValue("comment", comment.comment);
+  }, [comment, setValue, disable]);
 
   // 댓글을 삭제하는 함수
   const onDelete = (e) => {
-    e.stopPropagation();
-    const result = window.confirm("정말 삭제하시겠습니까? 😢");
-    if (!result) return;
-    dispatch(__deleteComment(comment.id));
+    e.preventDefault();
+    deleteMutate(comment.id);
   };
 
   // Edit Form을  보여주는 함수
-  const onEdit = () => {
+  const onEdit = (e) => {
+    e.preventDefault();
     setDisable(false);
   };
 
   // 변경된 input값을 저장하는 함수
-  const EditSave = () => {
-    dispatch(__editSave({ ...comment, ...inputs }));
+  const onValid = (inputs) => {
+    editMutate({ id: comment.id, update: { ...inputs } });
     setDisable(true);
-    alert("수정완료! 😁");
   };
 
   useEffect(() => {
-    if (!disable) inputRef.current.focus();
-  }, [disable]);
+    if (!disable) setFocus("comment");
+  }, [disable, setFocus]);
 
   return (
-    <CommentContainer>
-      <ComInput ref={inputRef} type="text" name="comment" value={inputs.comment} disabled={disable} onChange={onChange} />
+    <CommentContainer onSubmit={handleSubmit(onValid)}>
+      <ComInput
+        {...register("comment")}
+        type="text"
+        name="comment"
+        disabled={disable}
+      />
       {disable ? (
         <button onClick={onDelete}>
           <DeleteSvg />
         </button>
       ) : (
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             setDisable(true);
-            reset();
           }}
         >
           <CloseSvg />
@@ -60,7 +71,7 @@ function CommentEdit({ comment }) {
           <EditSvg />
         </button>
       ) : (
-        <button onClick={EditSave}>
+        <button>
           <CheckSvg />
         </button>
       )}
@@ -77,7 +88,7 @@ const ComInput = styled.input`
   border-radius: 10px;
 `;
 
-const CommentContainer = styled.div`
+const CommentContainer = styled.form`
   svg {
     width: 20px;
   }

@@ -1,37 +1,28 @@
 import Button from "../../elem/Button";
 import styled from "styled-components";
-import { __addTodos } from "../../redux/modules/todos";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import useInputs from "../../hooks/useInputs";
 import { memo } from "react";
+import { useMutation } from "react-query";
+import { addTodos } from "../../api/todos/todosApi";
+import { queryClient } from "../..";
 function TodoForm() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { mutate } = useMutation(addTodos, {
+    onSuccess: () => queryClient.invalidateQueries("todos"),
+  });
   const { inputs, onChange, reset } = useInputs({
     title: "",
     content: "",
     color: "",
   });
-
   const onSubmit = (e) => {
     e.preventDefault();
-    if (
-      inputs.title.trim() === "" ||
-      inputs.content.trim() === "" ||
-      inputs.color.trim() === ""
-    ) {
+    if (inputs.title.trim() === "" || inputs.content.trim() === "") {
       return alert("모든 항목을 입력해주세요.");
     }
-    dispatch(
-      __addTodos({
-        ...inputs,
-        id: Date.now(),
-        isDone: false,
-        createdAt: Date.now(),
-      })
-    );
+    mutate({ ...inputs, isDone: false, createdAt: Date.now() });
     reset();
     navigate("/todoList");
   };

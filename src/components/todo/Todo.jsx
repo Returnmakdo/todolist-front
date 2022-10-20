@@ -3,13 +3,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import Button from "../../elem/Button";
-import { __deleteTodos, __toggleTodos } from "../../redux/modules/todos";
+
 import { toggleAni } from "../../redux/modules/animation";
 import CheckSvg from "../../styles/svg/CheckSvg";
 import DeleteSvg from "../../styles/svg/DeleteSvg";
 import EditSvg from "../../styles/svg/EditSvg";
 import timeCheck from "../util/timeCheck";
 import { memo } from "react";
+import { useMutation } from "react-query";
+import { deleteTodos, toggleTodos } from "../../api/todos/todosApi";
+import { queryClient } from "../..";
 
 const boxAni = {
   initial: {
@@ -32,16 +35,22 @@ const btnStyle = {
 /** Todo 하나 하나의 컴포넌트 */
 function Todo({ id, title, content, color, createdAt, isDone, setLayId }) {
   const dispatch = useDispatch();
+  const { mutate: toggleMutate } = useMutation(toggleTodos, {
+    onSuccess: () => queryClient.invalidateQueries("todos"),
+  });
+  const { mutate: deleteMutate } = useMutation(deleteTodos, {
+    onSuccess: () => queryClient.invalidateQueries("todos"),
+  });
+
   const { boxAni: fadeOut, isLayout } = useSelector((state) => state.animation);
+
   const onToggle = () => {
     dispatch(toggleAni(boxAni));
-    dispatch(
-      __toggleTodos({ id, title, content, color, createdAt, isDone: !isDone })
-    );
+    toggleMutate({ id, update: { isDone: !isDone } });
   };
 
   const onDelete = () => {
-    dispatch(__deleteTodos(id));
+    deleteMutate(id);
     dispatch(toggleAni(boxAni));
   };
 

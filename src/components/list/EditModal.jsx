@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation, useQuery } from "react-query";
 import styled from "styled-components";
+import { queryClient } from "../..";
+import { editTodos, getTodo } from "../../api/todos/todosApi";
 import Button from "../../elem/Button";
-import useInputs from "../../hooks/useInputs";
-import { __editTodos } from "../../redux/modules/todos";
 import { Flexbox } from "../../styles/flex";
 import CloseSvg from "../../styles/svg/CloseSvg";
 
@@ -15,49 +17,42 @@ const btnStyle = {
 
 /** Todo의 edit 버튼을 클릭했을 때 나오는 모달창 */
 function EditModal({ layoutId, color, setLayId }) {
-  const { todos } = useSelector((state) => state.todos);
-  const todo = todos.find((todo) => todo.id === layoutId);
-  const { inputs, onChange } = useInputs({
-    title: todo.title,
-    content: todo.content,
+  const { data: todo } = useQuery("todo", () => getTodo(layoutId));
+
+  const { mutate } = useMutation(editTodos, {
+    onSuccess: () => queryClient.invalidateQueries("todos"),
   });
-  const dispatch = useDispatch();
+  const { register, setValue, handleSubmit } = useForm();
   const onClose = (e) => {
     e.preventDefault();
     setLayId(null);
   };
-  const onEdit = (e) => {
-    e.preventDefault(e);
 
-    dispatch(__editTodos({ id: todo.id, ...inputs }));
+  const onValid = (inputs) => {
+    mutate({ id: todo.id, update: { ...inputs } });
     setLayId(null);
   };
 
+  useEffect(() => {
+    setValue("title", todo?.title);
+    setValue("content", todo?.content);
+  }, [todo, setValue]);
+
   return (
-    <Modal layoutId={layoutId + ""} bgcolor={color}>
+    <Modal
+      layoutId={layoutId + ""}
+      bgcolor={color}
+      onSubmit={handleSubmit(onValid)}
+    >
       <div>
         <h3>Edit</h3>
         <span onClick={onClose}>
           <CloseSvg />
         </span>
       </div>
-      <input
-        value={inputs.title}
-        name="title"
-        type="text"
-        onChange={onChange}
-        required
-      />
-      <textarea
-        value={inputs.content}
-        name="content"
-        type="text"
-        onChange={onChange}
-        required
-      />
-      <Button {...btnStyle} _onClick={onEdit}>
-        Edit
-      </Button>
+      <input {...register("title")} name="title" type="text" required />
+      <textarea {...register("content")} name="content" type="text" required />
+      <Button {...btnStyle}>Edit</Button>
     </Modal>
   );
 }

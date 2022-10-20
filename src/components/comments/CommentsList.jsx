@@ -1,16 +1,11 @@
-import { useEffect, React } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { React } from "react";
+import { useQuery } from "react-query";
 import styled from "styled-components";
-import { __getComment } from "../../redux/modules/comments";
+import { getComments } from "../../api/comments/commentsApi";
 import CommentEdit from "./CommentEdit";
 
-function CommentsList({ id }) {
-  const { comments } = useSelector((state) => state.comments);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(__getComment(id));
-  }, [dispatch, id]);
+function CommentsList() {
+  const { data: comments } = useQuery("comments", getComments);
 
   return (
     <CommentList>
